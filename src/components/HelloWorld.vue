@@ -26,7 +26,7 @@
     </el-form>
   </div>
   <div class="container" style="width: 100%">
-    <el-table :data="filterTableData" style="width: 100%">
+    <el-table :data="tableData" style="width: 100%">
       <el-table-column label="username" prop="username"/>
       <el-table-column label="permissionId" prop="permissionId"/>
       <el-table-column label="permissionName" prop="permissionName"/>
@@ -52,31 +52,24 @@
   </div>
 </template>
 <script setup lang="ts">
-import {computed, ref, reactive} from 'vue'
+import {computed, ref, reactive, getCurrentInstance} from 'vue'
 import type {FormInstance} from 'element-plus'
 
 defineProps<{ msg: string }>()
 const ruleFormRef = ref<FormInstance>()
 const count = ref(0)
+const {proxy} = getCurrentInstance();
 
 interface permission {
-  username: String
-  permissionId: String
-  permissionName: String
-  permissionUrl: String
-  creatTime: String
-  updateTime: String
-  lastLoginTime: String
+  username: any
+  permissionId: any
+  permissionName: any
+  permissionUrl: any
+  creatTime: any
+  updateTime: any
+  lastLoginTime: any
 }
 
-const search = ref('')
-const filterTableData = computed(() =>
-    tableData.filter(
-        (data) =>
-            !search.value ||
-            data.name.toLowerCase().includes(search.value.toLowerCase())
-    )
-)
 const handleEdit = (index: number, row: permission) => {
   console.log(index, row)
 }
@@ -84,13 +77,13 @@ const handleDelete = (index: number, row: permission) => {
   console.log(index, row)
 }
 
-const tableData: permission[] = []
+const tableData = ref([])
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Please input the password'))
   } else {
-    if (ruleForm.checkPass !== '') {
+    if (ruleForm.pass !== '') {
       if (!ruleFormRef.value) return
       ruleFormRef.value.validateField('checkPass', () => null)
     }
@@ -101,7 +94,7 @@ const validatePass2 = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Please input the username'))
   } else {
-    if (ruleForm.checkPass !== '') {
+    if (ruleForm.username !== '') {
       if (!ruleFormRef.value) return
       ruleFormRef.value.validateField('checkPass', () => null)
     }
@@ -139,6 +132,27 @@ const submitForm = (formEl: FormInstance | undefined) => {
       return false
     }
   })
+  // 登录
+  proxy.$axios({
+    method: 'post',
+    url: '/api/api/login',
+    params: {
+      username: ruleForm.username,
+      password: ruleForm.pass,
+    }
+  }).then(res => {
+    if (res.data.code == 200) {
+      proxy.$axios({
+        method: 'get',
+        url: '/api/admin/scan',
+        params: {
+          name: ruleForm.username,
+        }
+      }).then((res: any) => {
+        tableData.value = res.data.data;
+      })
+    }
+  });
 }
 
 const resetForm = (formEl: FormInstance | undefined) => {
