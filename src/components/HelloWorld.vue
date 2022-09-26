@@ -1,35 +1,151 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-
-defineProps<{ msg: string }>()
-
-const count = ref(0)
-</script>
-
 <template>
-  <h1>{{ msg }}</h1>
 
   <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
-  </div>
+    <el-form
+        ref="ruleFormRef"
+        :model="ruleForm"
+        status-icon
+        :rules="rules"
+        label-width="120px"
+        class="demo-ruleForm"
+    >
+      <el-form-item label="Username" prop="username">
+        <el-input v-model.number="ruleForm.username"/>
+      </el-form-item>
+      <el-form-item label="Password" prop="pass">
+        <el-input v-model="ruleForm.pass" type="password" autocomplete="off"/>
+      </el-form-item>
 
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Install
-    <a href="https://github.com/johnsoncodehk/volar" target="_blank">Volar</a>
-    in your IDE for a better DX
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm(ruleFormRef)"
+        >Submit
+        </el-button
+        >
+        <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+  <div class="container" style="width: 100%">
+    <el-table :data="filterTableData" style="width: 100%">
+      <el-table-column label="username" prop="username"/>
+      <el-table-column label="permissionId" prop="permissionId"/>
+      <el-table-column label="permissionName" prop="permissionName"/>
+      <el-table-column label="permissionUrl" prop="permissionUrl"/>
+      <el-table-column label="creatTime" prop="creatTime"/>
+      <el-table-column label="updateTime" prop="updateTime"/>
+      <el-table-column label="lastLoginTime" prop="lastLoginTime">
+        <template #default="scope">
+          <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
+          >Edit
+          </el-button
+          >
+          <el-button
+              size="small"
+              type="danger"
+              @click="handleDelete(scope.$index, scope.row)"
+          >Delete
+          </el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
 </template>
+<script setup lang="ts">
+import {computed, ref, reactive} from 'vue'
+import type {FormInstance} from 'element-plus'
+
+defineProps<{ msg: string }>()
+const ruleFormRef = ref<FormInstance>()
+const count = ref(0)
+
+interface permission {
+  username: String
+  permissionId: String
+  permissionName: String
+  permissionUrl: String
+  creatTime: String
+  updateTime: String
+  lastLoginTime: String
+}
+
+const search = ref('')
+const filterTableData = computed(() =>
+    tableData.filter(
+        (data) =>
+            !search.value ||
+            data.name.toLowerCase().includes(search.value.toLowerCase())
+    )
+)
+const handleEdit = (index: number, row: permission) => {
+  console.log(index, row)
+}
+const handleDelete = (index: number, row: permission) => {
+  console.log(index, row)
+}
+
+const tableData: permission[] = []
+
+const validatePass = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('Please input the password'))
+  } else {
+    if (ruleForm.checkPass !== '') {
+      if (!ruleFormRef.value) return
+      ruleFormRef.value.validateField('checkPass', () => null)
+    }
+    callback()
+  }
+}
+const validatePass2 = (rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('Please input the username'))
+  } else {
+    if (ruleForm.checkPass !== '') {
+      if (!ruleFormRef.value) return
+      ruleFormRef.value.validateField('checkPass', () => null)
+    }
+    callback()
+  }
+}
+
+const ruleForm = reactive({
+  pass: '',
+  username: '',
+})
+
+const rules = reactive({
+  pass: [
+    {
+      validator: validatePass,
+      trigger: 'blur'
+    }
+  ],
+  username: [
+    {
+      validator: validatePass2,
+      trigger: 'blur'
+    }
+  ],
+})
+
+const submitForm = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.validate((valid) => {
+    if (valid) {
+      console.log('submit!')
+    } else {
+      console.log('error submit!')
+      return false
+    }
+  })
+}
+
+const resetForm = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.resetFields()
+}
+</script>
 
 <style scoped>
 .read-the-docs {
