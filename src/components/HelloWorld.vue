@@ -1,63 +1,65 @@
 <template>
+  <div class="container" style=" width:100%;margin:0">
+    <div class="card" style=" width:100%;margin:0">
+      <el-form
+          ref="ruleFormRef"
+          :model="ruleForm"
+          status-icon
+          :rules="rules"
+          label-width="120px"
+          class="demo-ruleForm"
+      >
+        <el-form-item label="Username" prop="username">
+          <el-input v-model.number="ruleForm.username"/>
+        </el-form-item>
+        <el-form-item label="Password" prop="pass">
+          <el-input v-model="ruleForm.pass" type="password" autocomplete="off"/>
+        </el-form-item>
 
-  <div class="card">
-    <el-form
-        ref="ruleFormRef"
-        :model="ruleForm"
-        status-icon
-        :rules="rules"
-        label-width="120px"
-        class="demo-ruleForm"
-    >
-      <el-form-item label="Username" prop="username">
-        <el-input v-model.number="ruleForm.username"/>
-      </el-form-item>
-      <el-form-item label="Password" prop="pass">
-        <el-input v-model="ruleForm.pass" type="password" autocomplete="off"/>
-      </el-form-item>
-
-      <el-form-item>
-        <el-button type="primary" @click="submitForm(ruleFormRef)"
-        >Submit
-        </el-button
-        >
-        <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
-      </el-form-item>
-    </el-form>
-  </div>
-  <div class="container" style="width: 100%">
-    <el-table :data="tableData" style="width: 100%">
-      <el-table-column label="username" prop="username"/>
-      <el-table-column label="permissionId" prop="permissionId"/>
-      <el-table-column label="permissionName" prop="permissionName"/>
-      <el-table-column label="permissionUrl" prop="permissionUrl"/>
-      <el-table-column label="permissionPerms" prop="permissionPerms"/>
-      <el-table-column label="createTime" prop="createTime"/>
-      <el-table-column label="updateTime" prop="updateTime"/>
-      <el-table-column label="lastLoginTime" prop="lastLoginTime">
-      </el-table-column>
-      <el-table-column label="edit" prop="edit">
-        <template #default="scope">
-          <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
-          >Edit
+        <el-form-item>
+          <el-button type="primary" @click="submitForm(ruleFormRef)"
+          >Submit
           </el-button
           >
-          <el-button
-              size="small"
-              type="danger"
-              @click="handleDelete(scope.$index, scope.row)"
-          >Delete
-          </el-button
-          >
-        </template>
-      </el-table-column>
+          <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="table" style=" width:100%;margin:0">
+      <el-table :data="tableData" style=" width:100%;margin:0">
+        <el-table-column label="username" prop="username" min-width="10%"/>
+        <el-table-column label="permissionId" prop="permissionId" min-width="10%"/>
+        <el-table-column label="permissionName" prop="permissionName" min-width="10%"/>
+        <el-table-column label="permissionUrl" prop="permissionUrl" min-width="15%"/>
+        <el-table-column label="permissionPerms" prop="permissionPerms" min-width="15%"/>
+        <el-table-column label="createTime" prop="createTime" min-width="20%"/>
+        <el-table-column label="updateTime" prop="updateTime" min-width="20%"/>
+        <el-table-column label="lastLoginTime" prop="lastLoginTime" min-width="20%"/>
+        <el-table-column label="permissionOwner" prop="permissionOwner" min-width="10%"/>
+        <el-table-column label="edit" prop="edit" min-width="30%">
+          <template #default="scope">
+            <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
+            >Go to
+            </el-button
+            >
+            <el-button
+                size="small"
+                type="danger"
+                @click="handleDelete(scope.$index, scope.row)"
+            >Delete
+            </el-button
+            >
+          </template>
+        </el-table-column>
 
-    </el-table>
+      </el-table>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
 import {computed, ref, reactive, getCurrentInstance} from 'vue'
 import type {FormInstance} from 'element-plus'
+import {ElMessage, ElMessageBox} from "element-plus";
 
 defineProps<{ msg: string }>()
 const ruleFormRef = ref<FormInstance>()
@@ -75,7 +77,17 @@ interface permission {
 }
 
 const handleEdit = (index: number, row: permission) => {
-  console.log(index, row)
+  proxy.$axios({
+    method: 'get',
+    url: '/api'+row.permissionUrl,
+    // params: {
+    //   username: ruleForm.username,
+    //   password: ruleForm.pass,
+    // }
+  }).then((res: any) => {
+    console.log(res)
+  })
+
 }
 const handleDelete = (index: number, row: permission) => {
   console.log(index, row)
@@ -144,7 +156,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
       username: ruleForm.username,
       password: ruleForm.pass,
     }
-  }).then(res => {
+  }).then((res: any) => {
     if (res.data.code == 200) {
       proxy.$axios({
         method: 'get',
@@ -153,8 +165,12 @@ const submitForm = (formEl: FormInstance | undefined) => {
           name: ruleForm.username,
         }
       }).then((res: any) => {
-        console.log(res.data.data)
         tableData.value = res.data.data;
+      })
+    } else {
+      ElMessage({
+        type: 'erroe',
+        message: res.data.message
       })
     }
   });
@@ -169,5 +185,9 @@ const resetForm = (formEl: FormInstance | undefined) => {
 <style scoped>
 .read-the-docs {
   color: #888;
+}
+
+div {
+  width: 100%;
 }
 </style>
