@@ -31,9 +31,12 @@
       <el-table-column label="permissionId" prop="permissionId"/>
       <el-table-column label="permissionName" prop="permissionName"/>
       <el-table-column label="permissionUrl" prop="permissionUrl"/>
-      <el-table-column label="creatTime" prop="creatTime"/>
+      <el-table-column label="permissionPerms" prop="permissionPerms"/>
+      <el-table-column label="createTime" prop="createTime"/>
       <el-table-column label="updateTime" prop="updateTime"/>
       <el-table-column label="lastLoginTime" prop="lastLoginTime">
+      </el-table-column>
+      <el-table-column label="edit" prop="edit">
         <template #default="scope">
           <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
           >Edit
@@ -48,6 +51,7 @@
           >
         </template>
       </el-table-column>
+
     </el-table>
   </div>
 </template>
@@ -65,7 +69,7 @@ interface permission {
   permissionId: any
   permissionName: any
   permissionUrl: any
-  creatTime: any
+  createTime: any
   updateTime: any
   lastLoginTime: any
 }
@@ -149,6 +153,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
           name: ruleForm.username,
         }
       }).then((res: any) => {
+        console.log(res.data.data)
         tableData.value = res.data.data;
       })
     }
