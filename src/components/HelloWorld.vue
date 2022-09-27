@@ -79,7 +79,7 @@ interface permission {
 const handleEdit = (index: number, row: permission) => {
   proxy.$axios({
     method: 'get',
-    url: '/api'+row.permissionUrl,
+    url: '/api' + row.permissionUrl,
     // params: {
     //   username: ruleForm.username,
     //   password: ruleForm.pass,
@@ -91,6 +91,17 @@ const handleEdit = (index: number, row: permission) => {
 }
 const handleDelete = (index: number, row: permission) => {
   console.log(index, row)
+  proxy.$axios({
+    method: 'get',
+    url: '/api/user/movePerm',
+    params: {
+      username: ruleForm.username,
+      permId: row.permissionId,
+    }
+  }).then((res: any) => {
+    console.log(res)
+    tableData.value = res.data.data;
+  })
 }
 
 const tableData = ref([])
@@ -151,7 +162,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
   // 登录
   proxy.$axios({
     method: 'post',
-    url: '/api/api/login',
+    url: '/api/login',
     params: {
       username: ruleForm.username,
       password: ruleForm.pass,
@@ -160,7 +171,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
     if (res.data.code == 200) {
       proxy.$axios({
         method: 'get',
-        url: '/api/admin/scan',
+        url: '/api/user/scanPerms',
         params: {
           name: ruleForm.username,
         }
