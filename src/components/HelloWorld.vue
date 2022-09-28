@@ -334,9 +334,21 @@ const registReq = () => {
       dialogFormVisible.value = false;
       proxy.$axios({
         method: 'post',
+        // headers: {'X-Requested-With': 'XMLHttpRequest'},
+        // headers: {'Content-Type': 'application/json'},
         url: '/api/regist',
-        params: {
-          registForm
+        // params: {
+        //   registForm
+        // }
+        data: {
+          "userId": registForm.userId,
+          "username": registForm.username,
+          "password": registForm.password,
+          "email": registForm.email,
+          "phone": registForm.phone,
+          "sex": registForm.sex,
+          "age": registForm.age,
+          "status": registForm.status,
         }
       }).then((res: any) => {
         console.log(res.data)
