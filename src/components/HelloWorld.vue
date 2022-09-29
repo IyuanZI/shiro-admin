@@ -403,15 +403,22 @@ const registReq = () => {
 
 }
 const findUser = () => {
-  proxy.$axios({
-    method: 'get',
-    url: '/api/user/scanPerms',
-    params: {
-      name: searchInput.value
-    }
-  }).then((res: any) => {
-    tableData.value = res.data.data;
-  })
+  if (searchInput.value != '') {
+    proxy.$axios({
+      method: 'get',
+      url: '/api/user/scanPerms',
+      params: {
+        name: searchInput.value
+      }
+    }).then((res: any) => {
+      if (res.data != null) {
+        tableData.value = res.data.data;
+      }
+      ElMessage.error(res.data.message)
+    })
+  } else {
+    ElMessage.error("null")
+  }
 }
 </script>
 
