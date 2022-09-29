@@ -1,9 +1,5 @@
 <template>
   <div class="container" style=" width:100%;margin:0">
-    <el-button type="primary" @click="register"
-    >register
-    </el-button
-    >
     <div class="card" style=" width:100%;margin:0">
       <el-form
           ref="ruleFormRef"
@@ -21,18 +17,31 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="submitForm(ruleFormRef)"
+          <el-button type="primary" @click="loginReq(ruleFormRef)"
           >Submit
           </el-button
           >
           <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
 
-
+          <el-button @click="showDialog"
+          >regist
+          </el-button>
         </el-form-item>
 
       </el-form>
     </div>
     <div class="table" style=" width:100%;margin:0">
+      <div class="header" style="display: inline-flex" v-if="userLog.roleId==1 ? true : false">
+        <el-input
+            v-model="searchInput"
+            class="w-50 m-2"
+            placeholder="Search for a User"
+        >
+        </el-input>
+        <el-button :icon="Search" circle style="margin-left: 10px" @click="findUser"/>
+
+      </div>
+      <h3>Own Perms</h3>
       <el-table :data="tableData" style=" width:100%;margin:0">
         <el-table-column label="username" prop="username" min-width="30%"/>
         <el-table-column label="permissionId" prop="permissionId" min-width="30%"/>
@@ -68,7 +77,11 @@
 
   <!-- 弹出注册界面 -->
   <el-dialog v-model="dialogFormVisible" title="Welcome">
-    <el-form :model="registForm" :rules="regRule" ref="registFormRef">
+    <el-form
+        :model="registForm"
+        :rules="regRule"
+        ref="registFormRef"
+    >
       <el-form-item label="用户名" :label-width="formLabelWidth" prop="userId">
         <el-input v-model="registForm.userId" autocomplete="off"/>
       </el-form-item>
@@ -84,6 +97,13 @@
       <el-form-item label="手机号" :label-width="formLabelWidth" prop="phone">
         <el-input v-model="registForm.phone" autocomplete="off"/>
       </el-form-item>
+      <el-form-item label="身份码" :label-width="formLabelWidth">
+        <el-select v-model="registForm.role" placeholder="Select One" @change="handleRoleSelect">
+          <el-option label="超级管理员" :disabled="true" value="1"/>
+          <el-option label="经理" value="2"/>
+          <el-option label="用户" value="3"/>
+        </el-select>
+      </el-form-item>
       <el-form-item label="性别" :label-width="formLabelWidth">
         <el-select v-model="registForm.sex" placeholder="Select One" @change="handleSexSelect">
           <el-option label="GG" value="1"/>
@@ -92,9 +112,6 @@
       </el-form-item>
       <el-form-item label="age" :label-width="formLabelWidth">
         <el-input v-model="registForm.age" autocomplete="off"/>
-      </el-form-item>
-      <el-form-item label="状态码" :label-width="formLabelWidth">
-        <el-input v-model="registForm.status" autocomplete="off"/>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -153,9 +170,23 @@
 </template>
 <script setup lang="ts">
 import {computed, ref, reactive, getCurrentInstance, provide} from 'vue'
+import {
+  Search,
+} from '@element-plus/icons-vue'
 import type {FormInstance} from 'element-plus'
 import {ElMessage, ElMessageBox} from "element-plus";
 import {FormItemProp} from "element-plus/es/components/form/src/form-item";
+
+interface permission {
+  username: any
+  permissionId: any
+  permissionName: any
+  permissionUrl: any
+  createTime: any
+  updateTime: any
+  lastLoginTime: any
+}
+
 
 const formLabelWidth = '140px'
 defineProps<{ msg: string }>()
@@ -177,22 +208,27 @@ const registForm = reactive({
   phone: '',
   sex: '',
   age: '',
-  status: '',
+  role: '',
 })
 
-interface permission {
-  username: any
-  permissionId: any
-  permissionName: any
-  permissionUrl: any
-  createTime: any
-  updateTime: any
-  lastLoginTime: any
-}
+const ruleForm = reactive({
+  pass: '',
+  username: '',
+})
+const userLog = reactive({
+  userId: '',
+  roleId: '',
+  username: '',
+  email: '',
+  phone: '',
+  createTime: '',
+})
+const searchInput = ref("");
 
 const handleEdit = (index: number, row: permission) => {
   dialogForm2Visible.value = true;
 }
+
 const handleDelete = (index: number, row: permission) => {
   console.log(index, row)
   proxy.$axios({
@@ -203,11 +239,9 @@ const handleDelete = (index: number, row: permission) => {
       permId: row.permissionId,
     }
   }).then((res: any) => {
-    console.log(res)
     tableData.value = res.data.data;
   })
 }
-
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
@@ -231,12 +265,6 @@ const validatePass2 = (rule: any, value: any, callback: any) => {
     callback()
   }
 }
-
-
-const ruleForm = reactive({
-  pass: '',
-  username: '',
-})
 
 const rules = reactive({
   pass: [
@@ -276,10 +304,12 @@ const regRule = reactive({
     {required: true, message: '必填', trigger: 'blur'},
     {pattern: '^1[3|4|5|7|8]\\d{9}$', message: '请输入正确有效的手机号码', trigger: 'blur'},
   ],
+  role: [
+    {required: true, message: '必填', trigger: 'blur'},
+  ]
 })
 
-
-const submitForm = (formEl: FormInstance | undefined) => {
+const loginReq = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
@@ -299,6 +329,10 @@ const submitForm = (formEl: FormInstance | undefined) => {
     }
   }).then((res: any) => {
     if (res.data.code == 200) {
+      // 登录成功，拿到此用户的身份信息
+      initUser(res.data.data);
+      console.log("userLog", userLog)
+
       proxy.$axios({
         method: 'get',
         url: '/api/user/scanPerms',
@@ -318,6 +352,15 @@ const submitForm = (formEl: FormInstance | undefined) => {
   });
 }
 
+const initUser = (data: any) => {
+  userLog.username = data.username;
+  userLog.userId = data.userId;
+  userLog.email = data.email;
+  userLog.phone = data.phone;
+  userLog.createTime = data.createTime;
+  userLog.roleId = data.roleId;
+}
+
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
@@ -325,7 +368,11 @@ const resetForm = (formEl: FormInstance | undefined) => {
 const handleSexSelect = (val: any) => {
   registForm.sex = val;
 }
-const register = () => {
+const handleRoleSelect = (val: any) => {
+  console.log(val)
+  registForm.role = val;
+}
+const showDialog = () => {
   dialogFormVisible.value = true;
 }
 const registReq = () => {
@@ -334,21 +381,16 @@ const registReq = () => {
       dialogFormVisible.value = false;
       proxy.$axios({
         method: 'post',
-        // headers: {'X-Requested-With': 'XMLHttpRequest'},
-        // headers: {'Content-Type': 'application/json'},
         url: '/api/regist',
-        // params: {
-        //   registForm
-        // }
         data: {
           "userId": registForm.userId,
           "username": registForm.username,
           "password": registForm.password,
+          "roleId": registForm.role,
           "email": registForm.email,
           "phone": registForm.phone,
           "sex": registForm.sex,
           "age": registForm.age,
-          "status": registForm.status,
         }
       }).then((res: any) => {
         console.log(res.data)
@@ -359,6 +401,17 @@ const registReq = () => {
     }
   })
 
+}
+const findUser = () => {
+  proxy.$axios({
+    method: 'get',
+    url: '/api/user/scanPerms',
+    params: {
+      name: searchInput.value
+    }
+  }).then((res: any) => {
+    tableData.value = res.data.data;
+  })
 }
 </script>
 
