@@ -187,6 +187,7 @@ import type {FormInstance} from 'element-plus'
 import {ElMessage, ElMessageBox} from "element-plus";
 import {FormItemProp} from "element-plus/es/components/form/src/form-item";
 
+// ===========全局变量===========
 interface permission {
   username: any
   permissionId: any
@@ -234,11 +235,20 @@ const userLog = reactive({
   createTime: '',
 })
 const searchInput = ref("");
+// ===========全局变量===========
 
+
+
+
+/*
+* Modify按钮的操作处理（表格）
+* */
 const handleEdit = (index: number, row: permission) => {
   dialogForm2Visible.value = true;
 }
-
+/*
+* Delete按钮的操作处理（表格）
+* */
 const handleDelete = (index: number, row: permission) => {
   console.log(index, row)
   proxy.$axios({
@@ -252,7 +262,9 @@ const handleDelete = (index: number, row: permission) => {
     tableData.value = res.data.data;
   })
 }
-
+/*
+* 自定义验证（登录密码）
+* */
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Please input the password'))
@@ -264,6 +276,9 @@ const validatePass = (rule: any, value: any, callback: any) => {
     callback()
   }
 }
+/*
+* 自定义验证（登录账号）
+* */
 const validatePass2 = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Please input the username'))
@@ -275,7 +290,9 @@ const validatePass2 = (rule: any, value: any, callback: any) => {
     callback()
   }
 }
-
+/*
+* 验证规则（登录表单）
+* */
 const rules = reactive({
   pass: [
     {
@@ -290,6 +307,9 @@ const rules = reactive({
     }
   ],
 })
+/*
+* 验证规则（注册表单）
+* */
 const regRule = reactive({
   userId: [
     {required: true, message: '必填', trigger: 'blur'},
@@ -318,7 +338,9 @@ const regRule = reactive({
     {required: true, message: '必填', trigger: 'blur'},
   ]
 })
-
+/*
+* 发送登录请求
+* */
 const loginReq = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
@@ -381,6 +403,9 @@ const loginReq = (formEl: FormInstance | undefined) => {
     });
   }
 }
+/*
+* 发送注销请求并初始化表单
+* */
 const logoutReq = () => {
   ElMessageBox.confirm(
       '确定进行注销操作吗？',
@@ -400,7 +425,7 @@ const logoutReq = () => {
             if (res.data.code == 200) {
               ElMessage({
                 type: 'success',
-                message: '[Logout completed]请重新输入账号密码登录',
+                message: '[COMPLETED]请重新输入账号密码登录',
               })
             }
           })
@@ -417,6 +442,9 @@ const logoutReq = () => {
 
 
 }
+/*
+* 初始化用户
+* */
 const initUser = (data: any) => {
   userLog.username = data.username;
   userLog.userId = data.userId;
@@ -425,21 +453,35 @@ const initUser = (data: any) => {
   userLog.createTime = data.createTime;
   userLog.roleId = data.roleId;
 }
-
+/*
+* 还原用户名密码表单
+* */
 const resetForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
 }
+/*
+* 注册页面，对性别选择项的处理
+* */
 const handleSexSelect = (val: any) => {
   registForm.sex = val;
 }
+/*
+* 注册页面，对身份选择项的处理
+* */
 const handleRoleSelect = (val: any) => {
   console.log(val)
   registForm.role = val;
 }
+/*
+* 显示注册弹窗
+* */
 const showDialog = () => {
   dialogFormVisible.value = true;
 }
+/*
+* 发送注册请求
+* */
 const registReq = () => {
   registFormRef.value?.validate((valid: boolean) => {
     if (valid) {
@@ -467,6 +509,9 @@ const registReq = () => {
   })
 
 }
+/*
+* 通过用户名查找用户权限
+* */
 const findUser = () => {
   if (searchInput.value != '') {
     proxy.$axios({
