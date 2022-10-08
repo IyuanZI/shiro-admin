@@ -1,6 +1,8 @@
 <template>
   <div class="container" style=" width:100%;margin:0">
+
     <div class="card" style=" width:100%;margin:0">
+
       <el-form
           ref="ruleFormRef"
           :model="ruleForm"
@@ -72,6 +74,14 @@
         </el-table-column>
 
       </el-table>
+      <el-button
+          type="danger"
+          style="width: 100%;margin-top: 20px"
+          click="logoutReq"
+          v-if="isLogin == true"
+      >Logout
+      </el-button>
+
     </div>
   </div>
 
@@ -187,7 +197,7 @@ interface permission {
   lastLoginTime: any
 }
 
-
+const isLogin = ref(false);
 const formLabelWidth = '140px'
 defineProps<{ msg: string }>()
 
@@ -320,38 +330,93 @@ const loginReq = (formEl: FormInstance | undefined) => {
     }
   })
   // 登录
-  proxy.$axios({
-    method: 'post',
-    url: '/api/login',
-    params: {
-      username: ruleForm.username,
-      password: ruleForm.pass,
-    }
-  }).then((res: any) => {
-    if (res.data.code == 200) {
-      // 登录成功，拿到此用户的身份信息
-      initUser(res.data.data);
-      console.log("userLog", userLog)
-
-      proxy.$axios({
-        method: 'get',
-        url: '/api/user/scanPerms',
-        params: {
-          name: ruleForm.username,
+  if (isLogin.value) {
+    ElMessageBox.confirm(
+        '是否继续，继续将自动注销当前账号',
+        'Warning',
+        {
+          confirmButtonText: 'OK',
+          cancelButtonText: 'Cancel',
+          type: 'warning',
         }
-      }).then((res: any) => {
-        tableData.value = res.data.data;
-      })
-    } else {
-      console.log(res.data)
-      ElMessage({
-        type: 'error',
-        message: res.data.message
-      })
-    }
-  });
+    )
+        .then(() => {
+          logoutReq();
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '[Logout canceled]',
+          })
+        })
+  } else {
+    proxy.$axios({
+      method: 'post',
+      url: '/api/login',
+      params: {
+        username: ruleForm.username,
+        password: ruleForm.pass,
+      }
+    }).then((res: any) => {
+      if (res.data.code == 200) {
+        // 登录成功，拿到此用户的身份信息
+        initUser(res.data.data);
+        isLogin.value = true;
+        proxy.$axios({
+          method: 'get',
+          url: '/api/user/scanPerms',
+          params: {
+            name: ruleForm.username,
+          }
+        }).then((res: any) => {
+          tableData.value = res.data.data;
+        })
+      } else {
+        isLogin.value = false;
+        ElMessage({
+          type: 'error',
+          message: res.data.message
+        })
+      }
+    });
+  }
 }
+const logoutReq = () => {
+  ElMessageBox.confirm(
+      '确定进行注销操作吗？',
+      'Warning',
+      {
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel',
+        type: 'warning',
+      }
+  )
+      .then(() => {
+        if (isLogin.value) {
+          tableData.value = [];
+          resetForm(ruleFormRef.value);
+          isLogin.value = false;
+          proxy.$axios.get("/api/logout").then((res: any) => {
+            if (res.data.code == 200) {
+              ElMessage({
+                type: 'success',
+                message: '[Logout completed]请重新输入账号密码登录',
+              })
+            }
+          })
+        } else {
+          ElMessage.error("尚未登录,无法进行注销操作")
+        }
+      })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: 'Delete canceled',
+        })
+      })
 
+
+}
 const initUser = (data: any) => {
   userLog.username = data.username;
   userLog.userId = data.userId;
