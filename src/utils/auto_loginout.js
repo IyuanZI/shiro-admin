@@ -1,19 +1,40 @@
 import router from '../Router'
+import {ElMessageBox} from "element-plus";
 
 export default function () {
     //定时器
     let setInterval = null;
-    // 设置超时时间: 10秒钟
+    // 设置超时时间: 10 * 60 * 1000 秒钟
     let timeOut = 10 * 60 * 1000
-    console.log("开始", new Date().getTime())
+
     // 初次向sessionStorage存入操作时间
+    // console.log("开始", new Date().getTime())
     window.sessionStorage.setItem('lastTime', new Date().getTime())
     // 每次操作页面，更新sessionStorage存入的操作时间
     window.onload = function () {
         window.document.onmousedown = function () {
-            console.log("开始", new Date().getTime())
             window.sessionStorage.setItem('lastTime', new Date().getTime())
         }
+    }
+
+    function dialog() {
+        ElMessageBox.confirm(
+            '时间过长，请重新登录',
+            'Warning',
+            {
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel',
+                type: 'warning',
+            }
+        )
+            .then(() => {
+                router.push("/")
+                window.location.reload()
+            })
+            .catch(() => {
+                router.push("/")
+                window.location.reload()
+            })
     }
 
     function checkTimeout() {
@@ -29,8 +50,7 @@ export default function () {
             // 清除sessionStorage
             window.sessionStorage.clear('lastTime')
             // 跳到登陆页
-            router.push("/")
-            window.location.reload()
+            dialog();
         }
     }
 

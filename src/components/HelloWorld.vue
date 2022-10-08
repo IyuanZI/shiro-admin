@@ -79,6 +79,7 @@
           style="width: 100%;margin-top: 20px"
           @click="logoutReq"
           v-if="isLogin == true"
+          plain
       >Logout
       </el-button>
 
@@ -188,6 +189,8 @@ import {ElMessage, ElMessageBox} from "element-plus";
 import {FormItemProp} from "element-plus/es/components/form/src/form-item";
 
 // ===========全局变量===========
+const {proxy} = getCurrentInstance()
+
 interface permission {
   username: any
   permissionId: any
@@ -205,7 +208,6 @@ defineProps<{ msg: string }>()
 const ruleFormRef = ref<FormInstance>()
 const registFormRef = ref<FormInstance>()
 
-const {proxy} = getCurrentInstance();
 const tableData = ref([])
 
 const dialogFormVisible = ref(false)
