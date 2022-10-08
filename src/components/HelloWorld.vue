@@ -77,7 +77,7 @@
       <el-button
           type="danger"
           style="width: 100%;margin-top: 20px"
-          click="logoutReq"
+          @click="logoutReq"
           v-if="isLogin == true"
       >Logout
       </el-button>
@@ -236,9 +236,6 @@ const userLog = reactive({
 })
 const searchInput = ref("");
 // ===========全局变量===========
-
-
-
 
 /*
 * Modify按钮的操作处理（表格）
